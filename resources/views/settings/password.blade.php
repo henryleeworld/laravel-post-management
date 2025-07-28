@@ -20,7 +20,7 @@
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Update password') }}</h1>
         <p class="text-gray-600 dark:text-gray-400 mt-1">
-            {{ __('Ensure your account is using a long, random password to stay secure.') }}
+            {{ __('Ensure your account is using a long, random password to stay secure') }}
         </p>
     </div>
 
