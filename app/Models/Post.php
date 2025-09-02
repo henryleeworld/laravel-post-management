@@ -45,7 +45,7 @@ class Post extends Model
     public static function booted()
     {
         static::creating(function ($post) {
-            $post->slug = Str::slug($post->title);
+            $post->slug = Str::slug($post->title, language: app()->getLocale());
         });
     }
 
