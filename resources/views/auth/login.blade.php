@@ -3,28 +3,28 @@
     <div
         class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="p-6">
-            <div class="text-center mb-6">
-                <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Login') }}</h1>
-                <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Sign in to your account') }}</p>
+            <div class="mb-3">
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Log in to your account') }}</h1>
             </div>
 
-            <form method="POST" action="{{ route('login') }}">
+            <form method="POST" action="{{ route('login') }}" class="space-y-3">
                 @csrf
                 <!-- Email Input -->
-                <div class="mb-4">
-                    <x-forms.input label="{{ __('Email') }}" name="email" type="email" placeholder="your@email.com" />
+                <div>
+                    <x-forms.input label="{{ __('Email') }}" name="email" type="email" placeholder="your@email.com" autofocus />
                 </div>
 
                 <!-- Password Input -->
-                <div class="mb-4">
+                <div>
                     <x-forms.input label="{{ __('Password') }}" name="password" type="password" placeholder="••••••••" />
-                    <a href="{{ route('password.request') }}"
-                        class="text-xs text-blue-600 dark:text-blue-400 hover:underline">{{ __('Forgot password?') }}</a>
-                </div>
-
-                <!-- Remember Me -->
-                <div class="mb-6">
-                    <x-forms.checkbox label="{{ __('Remember me') }}" name="remember" />
+                    <!-- Remember me & password reset -->
+                    <div class="flex items-center justify-between mt-2">
+                        @if (Route::has('password.request'))
+                            <a href="{{ route('password.request') }}"
+                                class="text-xs text-blue-600 dark:text-blue-400 hover:underline">{{ __('Forgot password?') }}</a>
+                        @endif
+                        <x-forms.checkbox label="{{ __('Remember me') }}" name="remember" />
+                    </div>
                 </div>
 
                 <!-- Login Button -->
@@ -32,13 +32,15 @@
             </form>
 
             <!-- Register Link -->
-            <div class="text-center mt-6">
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                    {{ __('Don\'t have an account?') }}
-                    <a href="{{ route('register') }}"
-                        class="text-blue-600 dark:text-blue-400 hover:underline font-medium">{{ __('Sign up') }}</a>
-                </p>
-            </div>
+            @if (Route::has('register'))
+                <div class="text-center mt-6">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        {{ __('Don\'t have an account?') }}
+                        <a href="{{ route('register') }}"
+                            class="text-blue-600 dark:text-blue-400 hover:underline font-medium">{{ __('Sign up') }}</a>
+                    </p>
+                </div>
+            @endif
         </div>
     </div>
 </x-layouts.auth>
