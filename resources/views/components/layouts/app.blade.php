@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -73,6 +72,8 @@
             </main>
         </div>
     </div>
+    @vite(['resources/js/app.js'])
+    @stack('scripts')
     <script>
         window.setAppearance = function(appearance) {
             let setDark = () => document.documentElement.classList.add('dark')
@@ -99,9 +100,12 @@
                 document.addEventListener("DOMContentLoaded", () => setButtons(appearance))
             }
         }
-        window.setAppearance(window.localStorage.getItem('appearance') || 'system')
+        window.setAppearance(
+            "{{ auth()->user()->theme_preference ?? '' }}" || 
+            window.localStorage.getItem('appearance') || 
+            'system'
+        )
     </script>
-    @vite(['resources/js/app.js'])
 </body>
 
 </html>
