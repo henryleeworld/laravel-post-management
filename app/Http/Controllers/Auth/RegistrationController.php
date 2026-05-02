@@ -22,7 +22,9 @@ class RegistrationController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Handle an incoming registration request.
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function store(Request $request): RedirectResponse
     {

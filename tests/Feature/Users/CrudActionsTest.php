@@ -1,137 +1,169 @@
 <?php
 
+namespace Tests\Feature\Users;
+
 use App\Models\User;
-use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
-it('only admins can create users', function () {
-    $user = User::factory()->create();
+class CrudActionsTest extends TestCase
+{
+    public function test_only_admins_can_access_create_page()
+    {
+        $user = User::factory()->create();
 
-    $this->actingAs($user);
+        $this->actingAs($user)
+            ->get(route('users.create'))
+            ->assertStatus(403);
+    }
 
-    $this->get(route('users.create'))->assertStatus(403);
-});
+    public function test_non_admins_cannot_create_users()
+    {
+        $users = [
+            User::factory()->editor()->create(),
+            User::factory()->author()->create(),
+            User::factory()->contributor()->create(),
+        ];
 
-it('non admins cannot create users', function (User $user) {
-    $this->actingAs($user);
+        foreach ($users as $user) {
+            $this->actingAs($user)
+                ->get(route('users.create'))
+                ->assertStatus(403);
+        }
+    }
 
-    $this->get(route('users.create'))->assertStatus(403);
-})->with([
-    fn() => User::factory()->editor()->create(),
-    fn() => User::factory()->author()->create(),
-    fn() => User::factory()->contributor()->create(),
-]);
+    public function test_admin_can_create_users()
+    {
+        $admin = User::factory()->admin()->create();
 
-it('can create users', function () {
-    $admin = User::factory()->admin()->create();
-    $this->actingAs($admin);
+        $this->actingAs($admin)
+            ->post(route('users.store'), [
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+                'password' => 'password',
+                'role' => 'Editor',
+            ])
+            ->assertRedirect(route('users.index'));
 
-    $this->post(route('users.store'), [
-        'name' => 'Test User',
-        'email' => 'test@example.com',
-        'password' => 'password',
-        'role' => 'Editor',
-    ])->assertRedirect(route('users.index'));
+        $this->assertDatabaseHas('users', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+        ]);
 
-    $this->assertDatabaseHas('users', [
-        'name' => 'Test User',
-        'email' => 'test@example.com',
-    ]);
+        $this->assertDatabaseHas('model_has_roles', [
+            'role_id' => Role::where('name', 'Editor')->first()->id,
+        ]);
+    }
 
-    $this->assertDatabaseHas('model_has_roles', [
-        'role_id' => Role::where('name', 'Editor')->first()->id,
-    ]);
-});
+    public function test_admin_can_edit_users()
+    {
+        $admin = User::factory()->admin()->create();
+        $user = User::factory()->create();
 
-it('can edit users', function () {
-    $admin = User::factory()->admin()->create();
-    $this->actingAs($admin);
+        $this->actingAs($admin)
+            ->put(route('users.update', $user->id), [
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+                'password' => 'password512',
+                'role' => 'Editor',
+            ])
+            ->assertRedirect(route('users.index'));
 
-    $user = User::factory()->create();
+        $this->assertDatabaseHas('users', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+        ]);
 
-    $this->put(route('users.update', $user->id), [
-        'name' => 'Test User',
-        'email' => 'test@example.com',
-        'password' => 'password512',
-        'role' => 'Editor',
-    ])->assertRedirect(route('users.index'));
+        $this->assertDatabaseHas('model_has_roles', [
+            'role_id' => Role::where('name', 'Editor')->first()->id,
+        ]);
 
-    $this->assertDatabaseHas('users', [
-        'name' => 'Test User',
-        'email' => 'test@example.com',
-    ]);
+        $user = $user->fresh();
+        $this->assertTrue(Hash::check('password512', $user->password));
+    }
 
-    $this->assertDatabaseHas('model_has_roles', [
-        'role_id' => Role::where('name', 'Editor')->first()->id,
-    ]);
+    public function test_admin_can_update_users_without_password()
+    {
+        $admin = User::factory()->admin()->create();
+        $user = User::factory()->create();
 
-    $user = $user->fresh();
-    $this->assertTrue(Hash::check('password512', $user->password));
-});
+        $this->actingAs($admin)
+            ->put(route('users.update', $user->id), [
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+                'role' => 'Editor',
+            ])
+            ->assertRedirect(route('users.index'));
 
-it('can update users without password', function () {
-    $admin = User::factory()->admin()->create();
-    $this->actingAs($admin);
+        $this->assertDatabaseHas('users', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+        ]);
 
-    $user = User::factory()->create();
+        $this->assertDatabaseHas('model_has_roles', [
+            'role_id' => Role::where('name', 'Editor')->first()->id,
+        ]);
 
-    $this->put(route('users.update', $user->id), [
-        'name' => 'Test User',
-        'email' => 'test@example.com',
-        'role' => 'Editor',
-    ])->assertRedirect(route('users.index'));
+        $user = $user->fresh();
+        $this->assertTrue(Hash::check('password', $user->password));
+    }
 
-    $this->assertDatabaseHas('users', [
-        'name' => 'Test User',
-        'email' => 'test@example.com',
-    ]);
+    public function test_admin_can_view_user_list()
+    {
+        $admin = User::factory()->admin()->create();
+        $users = User::factory()->count(10)->create();
 
-    $this->assertDatabaseHas('model_has_roles', [
-        'role_id' => Role::where('name', 'Editor')->first()->id,
-    ]);
+        $this->actingAs($admin)
+            ->get(route('users.index'))
+            ->assertStatus(200)
+            ->assertSeeText($users->pluck('name')->toArray());
+    }
 
-    $user = $user->fresh();
-    $this->assertTrue(Hash::check('password', $user->password));
-});
+    public function test_admin_can_delete_users()
+    {
+        $admin = User::factory()->admin()->create();
+        $user = User::factory()->create();
 
-it('can view list of users', function () {
-    $admin = User::factory()->admin()->create();
-    $users = User::factory()->count(10)->create();
-    $this->actingAs($admin);
+        $this->actingAs($admin)
+            ->delete(route('users.destroy', $user->id))
+            ->assertRedirect(route('users.index'));
+    }
 
-    $this->get(route('users.index'))->assertStatus(200)->assertSeeText($users->pluck('name')->toArray());
-});
+    public function test_other_roles_cannot_delete_users()
+    {
+        $users = [
+            User::factory()->editor()->create(),
+            User::factory()->author()->create(),
+            User::factory()->contributor()->create(),
+        ];
 
-it('can delete users', function () {
-    $admin = User::factory()->admin()->create();
-    $user = User::factory()->create();
-    $this->actingAs($admin);
+        foreach ($users as $user) {
+            $this->actingAs($user)
+                ->delete(route('users.destroy', $user->id))
+                ->assertStatus(403);
+        }
+    }
 
-    $this->delete(route('users.destroy', $user->id))->assertRedirect(route('users.index'));
-});
+    public function test_other_roles_cannot_edit_users()
+    {
+        $users = [
+            User::factory()->editor()->create(),
+            User::factory()->author()->create(),
+            User::factory()->contributor()->create(),
+        ];
 
-it('other roles cannot delete users', function (User $user) {
-    $this->actingAs($user);
+        foreach ($users as $user) {
+            $this->actingAs($user)
+                ->get(route('users.edit', $user->id))
+                ->assertStatus(403);
 
-    $this->delete(route('users.destroy', $user->id))->assertStatus(403);
-})->with([
-    fn() => User::factory()->editor()->create(),
-    fn() => User::factory()->author()->create(),
-    fn() => User::factory()->contributor()->create(),
-]);
-
-it('other roles cannot edit users', function (User $user) {
-    $this->actingAs($user);
-
-    $this->get(route('users.edit', $user->id))->assertStatus(403);
-    $this->put(route('users.update', $user->id), [
-        'name' => 'Test User',
-        'email' => 'test@example.com',
-        'password' => 'password512',
-        'role' => 'Editor',
-    ])->assertStatus(403);
-})->with([
-    fn() => User::factory()->editor()->create(),
-    fn() => User::factory()->author()->create(),
-    fn() => User::factory()->contributor()->create(),
-]);
+            $this->put(route('users.update', $user->id), [
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+                'password' => 'password512',
+                'role' => 'Editor',
+            ])->assertStatus(403);
+        }
+    }
+}

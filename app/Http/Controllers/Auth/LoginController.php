@@ -15,7 +15,7 @@ use Illuminate\View\View;
 class LoginController extends Controller
 {
     /**
-     * Show the form for creating a new resource.
+     * Display the login view.
      */
     public function create(): View
     {
@@ -23,7 +23,7 @@ class LoginController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Handle an incoming authentication request.
      */
     public function store(Request $request): RedirectResponse
     {
@@ -50,7 +50,7 @@ class LoginController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Destroy an authenticated session.
      */
     public function destroy(Request $request): RedirectResponse
     {
@@ -64,7 +64,9 @@ class LoginController extends Controller
     }
 
     /**
-     * Ensure the authentication request is not rate limited.
+     * Ensure the login request is not rate limited.
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     protected function ensureIsNotRateLimited(Request $request): void
     {
@@ -85,7 +87,7 @@ class LoginController extends Controller
     }
 
     /**
-     * Get the authentication rate limiting throttle key.
+     * Get the rate limiting throttle key for the request.
      */
     public function throttleKey(Request $request): string
     {

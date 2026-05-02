@@ -1,68 +1,84 @@
 <?php
 
-use App\Models\Setting;
+namespace Tests\Feature\PageSettings;
+
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\Setting;
+use Tests\TestCase;
 
-uses(RefreshDatabase::class);
+class PageSettingsTest extends TestCase
+{
+    public function test_can_open_page_settings_page_but_forbidden_for_normal_user()
+    {
+        $this->actingAs(User::factory()->create())
+            ->get(route('page-settings.index'))
+            ->assertStatus(403);
+    }
 
-it('can open the page settings page', function () {
-    $this->actingAs(User::factory()->create())
-        ->get(route('pageSettings.index'))
-        ->assertStatus(403);
-});
+    public function test_admin_can_open_page_settings_page()
+    {
+        $this->actingAs(User::factory()->admin()->create())
+            ->get(route('page-settings.index'))
+            ->assertStatus(200);
+    }
 
-it('admin can open the page settings page', function () {
-    $this->actingAs(User::factory()->admin()->create())
-        ->get(route('pageSettings.index'))
-        ->assertStatus(200);
-});
+    public function test_users_without_permission_cannot_open_page_settings_page()
+    {
+        $users = [
+            User::factory()->create(),
+            User::factory()->editor()->create(),
+            User::factory()->author()->create(),
+            User::factory()->contributor()->create(),
+        ];
 
-it('users without permission cannot open the page settings page', function (User $user) {
-    $this->actingAs($user)
-        ->get(route('pageSettings.index'))
-        ->assertStatus(403);
-})->with([
-    fn() => User::factory()->create(),
-    fn() => User::factory()->editor()->create(),
-    fn() => User::factory()->author()->create(),
-    fn() => User::factory()->contributor()->create(),
-]);
+        foreach ($users as $user) {
+            $this->actingAs($user)
+                ->get(route('page-settings.index'))
+                ->assertStatus(403);
+        }
+    }
 
-it('admin can update page settings', function () {
-    Setting::create([
-        'title' => 'Laravel',
-        'maintenance_mode' => '0',
-    ]);
+    public function test_admin_can_update_page_settings()
+    {
+        Setting::create([
+            'title' => 'Laravel',
+            'maintenance_mode' => '0',
+        ]);
 
-    $this->actingAs(User::factory()->admin()->create())
-        ->post(route('pageSettings.update'), [
+        $this->actingAs(User::factory()->admin()->create())
+            ->post(route('page-settings.update'), [
+                'title' => 'Test Page',
+                'maintenance_mode' => '1',
+            ])
+            ->assertStatus(302);
+
+        $this->assertDatabaseHas('settings', [
             'title' => 'Test Page',
             'maintenance_mode' => '1',
-        ])
-        ->assertStatus(302);
+        ]);
+    }
 
-    $this->assertDatabaseHas('settings', [
-        'title' => 'Test Page',
-        'maintenance_mode' => '1',
-    ]);
-});
+    public function test_users_without_permission_cannot_update_page_settings()
+    {
+        Setting::create([
+            'title' => 'Laravel',
+            'maintenance_mode' => '0',
+        ]);
 
-it('users without permission cannot update page settings', function (User $user) {
-    Setting::create([
-        'title' => 'Laravel',
-        'maintenance_mode' => '0',
-    ]);
+        $users = [
+            User::factory()->create(),
+            User::factory()->editor()->create(),
+            User::factory()->author()->create(),
+            User::factory()->contributor()->create(),
+        ];
 
-    $this->actingAs($user)
-        ->post(route('pageSettings.update'), [
-            'title' => 'Test Page',
-            'maintenance_mode' => '1',
-        ])
-        ->assertStatus(403);
-})->with([
-    fn() => User::factory()->create(),
-    fn() => User::factory()->editor()->create(),
-    fn() => User::factory()->author()->create(),
-    fn() => User::factory()->contributor()->create(),
-]);
+        foreach ($users as $user) {
+            $this->actingAs($user)
+                ->post(route('page-settings.update'), [
+                    'title' => 'Test Page',
+                    'maintenance_mode' => '1',
+                ])
+                ->assertStatus(403);
+        }
+    }
+}

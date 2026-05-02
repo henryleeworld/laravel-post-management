@@ -34,9 +34,9 @@
                             {{ __('Cancel') }}
                         </a>
                         @can('settings-update')
-                            <x-buttons.primary type="submit">
+                            <x-button type="primary" buttonType="submit">
                                 {{ __('Update Settings') }}
-                            </x-buttons.primary>
+                            </x-button>
                         @endcan
                     </div>
                 </div>

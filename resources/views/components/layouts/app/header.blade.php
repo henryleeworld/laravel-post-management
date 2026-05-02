@@ -70,24 +70,6 @@
                         {{ __('System') }}
                     </button>
                 </div>
-                @push('scripts')
-                <script>
-                    window.persistTheme = function(theme) {
-                        // Update UI immediately (client-side)
-                        if (typeof window.setAppearance === 'function') {
-                            window.setAppearance(theme);
-                        }
-                        
-                        // Set and submit form for persistence
-                        const form = document.getElementById('header-appearance-form');
-                        const input = document.getElementById('header_theme_preference');
-                        if (form && input) {
-                            input.value = theme;
-                            form.submit();
-                        }
-                    }
-                </script>
-                @endpush
             </div>
             <!-- Profile -->
             <div x-data="{ open: false }" class="relative">
@@ -99,7 +81,6 @@
                         </span>
                     </span>
                     <span class="ml-2 hidden md:block">{{ Auth::user()->name }}
-
                         @foreach (auth()->user()->roles as $role)
                             <span class="text-xs text-gray-500">{{ __($role->name) }}</span>
                         @endforeach
@@ -145,3 +126,19 @@
         </div>
     </div>
 </header>
+@push('scripts')
+<script>
+    window.persistTheme = function(theme) {
+        if (typeof window.setAppearance === 'function') {
+            window.setAppearance(theme);
+        }
+
+        const form = document.getElementById('header-appearance-form');
+        const input = document.getElementById('header_theme_preference');
+        if (form && input) {
+            input.value = theme;
+            form.submit();
+        }
+    }
+</script>
+@endpush

@@ -20,7 +20,7 @@ class ConfirmationController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Confirm the user's password.
      */
     public function store(Request $request): RedirectResponse
     {

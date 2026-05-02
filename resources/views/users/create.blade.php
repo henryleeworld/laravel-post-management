@@ -36,9 +36,9 @@
                             class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             {{ __('Cancel') }}
                         </a>
-                        <x-buttons.primary type="submit">
+                        <x-button type="primary" buttonType="submit">
                            {{ __('Create User') }}
-                        </x-buttons.primary>
+                        </x-button>
                     </div>
                 </div>
             </form>

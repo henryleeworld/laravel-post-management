@@ -18,6 +18,7 @@ class AppearanceController extends Controller
         return view('settings.appearance');
     }
 
+
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
